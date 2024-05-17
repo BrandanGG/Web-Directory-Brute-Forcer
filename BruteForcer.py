@@ -36,4 +36,4 @@ if __name__ == "__main__":
     domain = input("enter domain name \n")
     words = getWordList("wordlist-files")
     print(f"Loaded {len(words)} words from your directory.\n")
-    dirBuster("pihole.brand-an.com", words, isSecure())
+    dirBuster(domain, words, isSecure())
