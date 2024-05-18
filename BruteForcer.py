@@ -45,4 +45,4 @@ if __name__ == "__main__":
     userWL = input("Please enter the directory of the word lists you'd like to use (leave blank to use default)")
     words = getWordList("wordlist-files") if userWL == "" else getWordList(userWL)
     print(f"Loaded {len(words)} words from your directory.\n")
-    dirBuster("pihole.brand-an.com", words, isSecure())
+    dirBuster(domain, words, isSecure())
