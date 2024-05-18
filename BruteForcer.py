@@ -1,6 +1,7 @@
 import os
 import requests
 from typing import List
+from concurrent.futures import ThreadPoolExecutor, as_completed
 # returns list with all words from the wordlist directory
 def getWordList(d_path:str) -> List[str]: # param is the word list directory returns list of words
     words = []
@@ -12,17 +13,24 @@ def getWordList(d_path:str) -> List[str]: # param is the word list directory ret
     return words
 
 # Void method -- will output each successful response
-#Params are IP / Domain, wordlist
-def dirBuster(url:str, words:List, secure:bool):
-    if secure:
-        scheme = "HTTPS://"
-    else:
-        scheme = "HTTP://"
-    for word in words:
-        link = f"{scheme}{url}/{word}"
+# Takes the URL, word passed from dirBuster(), and if its HTTP(S) from isSecure()
+def check_word(url: str, word: str, scheme: str):
+    link = f"{scheme}{url}/{word}"
+    try:
         response = requests.get(link)
         if response.status_code == 200:
             print(word)
+    except requests.RequestException:
+        pass
+
+# Converted to support multi threading, runs multiple instances of check word.
+# runs check_word with the params and loops through word list (words). 10 MAX threads.
+def dirBuster(url:str, words:List, secure:bool):
+    scheme = "https://" if secure else "http://"
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = [executor.submit(check_word, url, word, scheme) for word in words]
+        for future in as_completed(futures):
+            future.result()
 
 # asking user if its HTTPS or HTTP, defaults to HTTP if no valid response
 def isSecure() -> bool:
@@ -34,6 +42,7 @@ def isSecure() -> bool:
         
 if __name__ == "__main__":
     domain = input("enter domain name \n")
-    words = getWordList("wordlist-files")
+    userWL = input("Please enter the directory of the word lists you'd like to use (leave blank to use default)")
+    words = getWordList("wordlist-files") if userWL == "" else getWordList(userWL)
     print(f"Loaded {len(words)} words from your directory.\n")
     dirBuster("pihole.brand-an.com", words, isSecure())
